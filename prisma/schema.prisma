@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Addresses {
+  AdressID BigInt     @id @default(autoincrement())
+  Address  String     @db.VarChar(255)
+  Abonents Abonents[]
+}
+
+model Abonents {
+  AbonentID BigInt @id @default(autoincrement())
+  PIB       String @db.VarChar(255)
+  AdressID  BigInt
+
+  Adress       Addresses      @relation(fields: [AdressID], references: [AdressID])
+  PhoneNumbers PhoneNumbers[]
+}
+
+model PhoneNumbers {
+  PhoneNumberID  BigInt   @id @default(autoincrement())
+  SimCardID      Int
+  PhoneNumber    String   @db.VarChar(255)
+  ActivationDate DateTime
+  ExpiryDate     DateTime
+  AbonentID      BigInt
+  Balance        Decimal  @db.Decimal(10, 2)
+
+  Abonent                 Abonents                  @relation(fields: [AbonentID], references: [AbonentID])
+  PhoneNumbersTariffPlans PhoneNumbersTariffPlans[]
+}
+
+model PhoneNumbersTariffPlans {
+  AbonentTariffPlanrID BigInt   @id @default(autoincrement())
+  PhoneNumberID        BigInt
+  TariffPlanID         BigInt
+  ExpiredDate          DateTime
+  CreatedAt            DateTime
+  Price                Int
+
+  PhoneNumber PhoneNumbers @relation(fields: [PhoneNumberID], references: [PhoneNumberID])
+  TarifPlan   TariffPlans  @relation(fields: [TariffPlanID], references: [TariffPlanID])
+}
+
+model TariffPlanServices {
+  TariffPlanServiceID BigInt @id @default(autoincrement())
+  TariffPlanID        BigInt
+  ServiceID           BigInt
+
+  TariffPlan TariffPlans @relation(fields: [TariffPlanID], references: [TariffPlanID])
+  Service    Services    @relation(fields: [ServiceID], references: [ServiceID])
+}
+
+model TariffPlans {
+  TariffPlanID            BigInt                    @id @default(autoincrement())
+  TariffPlanName          String                    @db.VarChar(255)
+  ActivationDate          DateTime
+  ExpiryDate              DateTime
+  Price                   Decimal                   @db.Decimal(10, 2)
+  ValidityDays            Int
+  PhoneNumbersTariffPlans PhoneNumbersTariffPlans[]
+  TariffPlanServices      TariffPlanServices[]
+}
+
+model Services {
+  ServiceID          BigInt               @id @default(autoincrement())
+  ServiceName        String               @db.VarChar(255)
+  Cost               Decimal              @db.Decimal(10, 2)
+  BillingMethod      String               @db.VarChar(50)
+  ActivationDate     DateTime
+  ExpiryDate         DateTime
+  TariffPlanServices TariffPlanServices[]
+}
